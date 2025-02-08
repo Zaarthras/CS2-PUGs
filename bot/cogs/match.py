@@ -155,7 +155,7 @@ class MatchCog(commands.Cog, name="Match"):
         description = ''
 
         if game_server:
-            description += f'📌 **Server:**\n[Join Server](https://steam-connect.zaarthras.de/{game_server.ip}:{game_server.port})\nor use the command:\n`connect {game_server.ip}:{game_server.port}`\n' \
+            description += f'📌 **Server:** `connect {game_server.ip}:{game_server.port}`\n' \
                            f'⚙️ **Game mode:** {game_server.game_mode}\n'
 
         description += f'🗺️ **Map:** {match_stats.map_name}\n\n'
