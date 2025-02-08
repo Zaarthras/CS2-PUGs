@@ -13,3 +13,6 @@ config.json
 
 # Ignore virtual environment
 venv/
+
+# Ignore PyCharm project files
+.idea/
