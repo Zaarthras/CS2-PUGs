@@ -18,12 +18,18 @@ If you wish to test the bot without any setup, feel free to [invite it](https://
    git clone https://github.com/thboss/g5-discord-bot
    ```
 
-3. Install the necessary libraries.
+3. Create and activate the virtual environment for Python
    ```
-   pip3 install -r requirements.txt
+   python3 -m venv .venv
+   source .venv/bin/activate
    ```
 
-4. Run the psql tool with `sudo -u postgres psql` and create a database by running the following commands:
+4. Install the necessary libraries while the virtual environment is active.
+   ```
+   pip install -r requirements.txt
+   ```
+
+5. Run the psql tool with `sudo -u postgres psql` and create a database by running the following commands:
 
    ```sql
    CREATE ROLE "g5" WITH LOGIN PASSWORD 'yourpassword';
@@ -34,20 +40,27 @@ If you wish to test the bot without any setup, feel free to [invite it](https://
 
    - Quit psql with `\q`
 
-5. Edit the configuration file
+6. Edit the configuration file
    ```
    cp config.json.template config.json && nano config.json
    ```
 
-6. Apply the database migrations
+7. Apply the database migrations
    ```
    python3 migrate.py up
    ```
 
-7. Finally, start the bot
+8. Finally, start the bot
    ```
    python3 run.py
    ```
+
+9. After closing the bot, exit the virtual environment
+   ```
+   deactivate
+   ```
+
+If you run the bot, don't forget to enter the virtual environment first using `source .venv/bin/activate` and exiting it after the bot is closed using `deactivate`.
 
 
 ## Requirements
