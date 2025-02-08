@@ -1,0 +1,15 @@
+﻿# Ignore specific image files
+assets/img/scoreboard.png
+assets/img/statistics.png
+
+# Ignore log files
+bot.log
+
+# Ignore all __pycache__ directories
+**/__pycache__/
+
+# Ignore configuration files
+config.json
+
+# Ignore virtual environment
+venv/
