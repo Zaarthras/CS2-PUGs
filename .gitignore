@@ -12,7 +12,7 @@ bot.log
 config.json
 
 # Ignore virtual environment
-venv/
+.venv/
 
 # Ignore PyCharm project files
 .idea/
