@@ -81,7 +81,7 @@ class WebServer:
                 self.logger.error(e, exc_info=1)
 
     async def handle_event(self, req):
-        self.logger.debug(f"Received webhook event from {req.url}")
+        self.logger.info(f"Received webhook event from {req.url}")
 
         api_key = req.headers.get('Authorization').strip('Bearer ')
         match_model = await self.bot.db.get_match_by_api_key(api_key)
@@ -91,8 +91,7 @@ class WebServer:
         if not match_model or not match_api:
             return
 
-        if resp_data['event'] == 'server_ready_for_players':
-            ReadyManager.ready(match_api.id)
+        ReadyManager.ready(match_api.id)
 
         return web.Response(status=200)
 
