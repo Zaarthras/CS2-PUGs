@@ -1,7 +1,7 @@
 import logging
 from aiohttp import web
 
-from bot.helpers.api import Match
+from bot.helpers.api import Match, ReadyManager
 from bot.resources import Config
 from bot.helpers.utils import generate_leaderboard_img, generate_scoreboard_img
 
@@ -80,6 +80,22 @@ class WebServer:
             except Exception as e:
                 self.logger.error(e, exc_info=1)
 
+    async def handle_event(self, req):
+        self.logger.debug(f"Received webhook event from {req.url}")
+
+        api_key = req.headers.get('Authorization').strip('Bearer ')
+        match_model = await self.bot.db.get_match_by_api_key(api_key)
+        resp_data = await req.json()
+        match_api = Match.from_dict(resp_data)
+
+        if not match_model or not match_api:
+            return
+
+        if resp_data['event'] == 'server_ready_for_players':
+            ReadyManager.ready(match_api.id)
+
+        return web.Response(status=200)
+
     async def start_webhook_server(self):
         if self.server_running:
             self.logger.warning("Webhook server is already running.")
@@ -91,6 +107,7 @@ class WebServer:
 
         app.router.add_post("/cs2bot-api/match-end", self.match_end)
         app.router.add_post("/cs2bot-api/round-end", self.round_end)
+        app.router.add_post("/cs2bot-api/event", self.handle_event)
 
         runner = web.AppRunner(app)
         await runner.setup()

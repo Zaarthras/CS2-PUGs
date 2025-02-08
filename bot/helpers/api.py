@@ -3,6 +3,8 @@
 import asyncio
 import logging
 import json
+import time
+
 import aiohttp
 from typing import Literal, Optional, List
 from bot.resources import Config
@@ -192,6 +194,7 @@ class APIManager:
         payload = {}
         if game_mode: payload["cs2_settings.game_mode"] = game_mode
         if location: payload["location"] = location
+        if Config.use_workshop: payload["cs2_settings.maps_source"] = "workshop_collection"
 
         async with self.session.put(url=url, data=payload) as resp:
             if resp.status == 401:
@@ -244,6 +247,10 @@ class APIManager:
             'webhooks': {
                 'match_end_url': f'http://{Config.webserver_host}:{Config.webserver_port}/cs2bot-api/match-end',
                 'round_end_url': f'http://{Config.webserver_host}:{Config.webserver_port}/cs2bot-api/round-end',
+                'enabled_events': [
+                    'server_ready_for_players',
+                ],
+                'event_url': f'http://{Config.webserver_host}:{Config.webserver_port}/cs2bot-api/event',
                 'authorization_header': api_key
             }
         }
@@ -295,3 +302,37 @@ class APIManager:
                 raise APIError("Invalid match ID.")
             else:
                 return APIError
+
+
+
+class ReadyManager:
+    _ready_matches = {}
+    EXPIRE_TIME = 60 * 60 * 6 # 6 hours
+
+    @staticmethod
+    def ready(match_id: int) -> None:
+        """Marks a match as ready with the current timestamp."""
+        ReadyManager._ready_matches[match_id] = time.time()
+        ReadyManager._cleanup()
+
+    @staticmethod
+    def check(match_id: int) -> bool:
+        """Checks if a match is ready and removes it if it exists."""
+        ready = False
+        if match_id in ReadyManager._ready_matches:
+            ReadyManager._ready_matches.pop(match_id)
+            ready = True
+
+        ReadyManager._cleanup()
+
+        return ready
+
+    @staticmethod
+    def _cleanup() -> None:
+        """Removes expired match entries based on EXPIRE_TIME."""
+        now = time.time()
+        ReadyManager._ready_matches = {
+            match_id: timestamp
+            for match_id, timestamp in ReadyManager._ready_matches.items()
+            if now - timestamp <= ReadyManager.EXPIRE_TIME
+        }

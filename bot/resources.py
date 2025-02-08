@@ -4,6 +4,7 @@ import os
 import sys
 import json
 
+from bot.helpers.utils import VALID_GAME_SERVER_LOCATIONS
 
 if not os.path.isfile(f"{os.path.realpath(os.path.dirname(__file__))}/../config.json"):
     sys.exit("'config.json' not found! Please add it and try again.")
@@ -18,6 +19,8 @@ class Config:
     guild_id = config['bot']['guild_id']
     sync_commands_globally = config['bot']['sync_commands_globally']
     debug = config['bot']['debug']
+    use_workshop = config['bot']['use_workshop']
+    locations = { k: v for k, v in config['bot']['locations'].items() if k in VALID_GAME_SERVER_LOCATIONS }
     maps = config['bot']['maps']
     dathost_email = config['dathost']['email']
     dathost_password = config['dathost']['password']

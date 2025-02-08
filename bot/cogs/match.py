@@ -7,8 +7,8 @@ from typing import List, Literal
 from random import choice, shuffle
 import asyncio
 
-from bot.helpers.api import Match
-from bot.helpers.utils import GAME_SERVER_LOCATIONS, generate_api_key, generate_scoreboard_img
+from bot.helpers.api import Match, ReadyManager
+from bot.helpers.utils import generate_api_key, generate_scoreboard_img
 from bot.helpers.models import GuildModel, MatchModel
 from bot.bot import G5Bot
 from bot.helpers.errors import APIError, CustomError
@@ -219,7 +219,7 @@ class MatchCog(commands.Cog, name="Match"):
                 map_name = choice(mpool)
 
             placeholder = "Choose your game server location"
-            options = [SelectOption(label=display_name, value=_id) for _id, display_name in GAME_SERVER_LOCATIONS.items()]
+            options = [SelectOption(label=display_name, value=_id) for _id, display_name in Config.locations.items()]
             dropdown = DropDownView([team1_captain, team2_captain], placeholder, options, 1, 1)
             await message.edit(embed=None, view=dropdown)
             await dropdown.wait()
@@ -304,6 +304,19 @@ class MatchCog(commands.Cog, name="Match"):
             self.bot.logger.error(e, exc_info=1)
             description = 'Something went wrong! See logs for details'
         else:
+
+            ready = False
+            for attempt in range(60):
+                if ReadyManager.check(api_match.id):
+                    ready = True
+                    break
+                await asyncio.sleep(1)
+
+            if not ready:
+                await self.bot.api.cancel_match(api_match.id)
+                await message.edit(embed=Embed(description='Server setup took too long. Cancelling match.'), view=None)
+                return False
+
             embed = self.embed_match_info(api_match, game_server)
             await message.edit(embed=embed)
 
