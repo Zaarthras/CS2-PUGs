@@ -308,17 +308,10 @@ class MatchCog(commands.Cog, name="Match"):
             await message.edit(embed=Embed(description='Waiting for the server to finish setting up...'), view=None)
             await asyncio.sleep(2)
 
-            ready = False
-            for attempt in range(60):
+            for attempt in range(30):
                 if ReadyManager.check(api_match.id):
-                    ready = True
                     break
                 await asyncio.sleep(1)
-
-            if not ready:
-                await self.bot.api.cancel_match(api_match.id)
-                await message.edit(embed=Embed(description='Server setup took too long. Cancelling match.'), view=None)
-                return False
 
             embed = self.embed_match_info(api_match, game_server)
             await message.edit(embed=embed)
