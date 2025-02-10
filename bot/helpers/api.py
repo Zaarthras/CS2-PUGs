@@ -257,6 +257,14 @@ class APIManager:
 
         async with self.session.post(url=url, json=payload) as resp:
             if resp.ok:
+
+                # Wait for 30 seconds to give the server time to load workshop maps. If we receive a ready-signal before
+                # that, we'll skip the remaining delay:
+                for delay_second in range(30):
+                    if ReadyManager.check(api_key):
+                        break
+                    await asyncio.sleep(1)
+
                 resp_data = await resp.json()
                 return Match.from_dict(resp_data)
             elif resp.status == 401:
@@ -307,20 +315,20 @@ class APIManager:
 
 class ReadyManager:
     _ready_matches = {}
-    EXPIRE_TIME = 60 * 60 * 6 # 6 hours
+    EXPIRE_TIME = 31 # We're only waiting for this for 30 seconds, so any expire time above that is alright.
 
     @staticmethod
-    def ready(match_id: int) -> None:
+    def mark_ready(api_key: str) -> None:
         """Marks a match as ready with the current timestamp."""
-        ReadyManager._ready_matches[match_id] = time.time()
+        ReadyManager._ready_matches[api_key] = time.time()
         ReadyManager._cleanup()
 
     @staticmethod
-    def check(match_id: int) -> bool:
+    def check(api_key: str) -> bool:
         """Checks if a match is ready and removes it if it exists."""
         ready = False
-        if match_id in ReadyManager._ready_matches:
-            ReadyManager._ready_matches.pop(match_id)
+        if api_key in ReadyManager._ready_matches:
+            ReadyManager._ready_matches.pop(api_key)
             ready = True
 
         ReadyManager._cleanup()
@@ -332,7 +340,7 @@ class ReadyManager:
         """Removes expired match entries based on EXPIRE_TIME."""
         now = time.time()
         ReadyManager._ready_matches = {
-            match_id: timestamp
-            for match_id, timestamp in ReadyManager._ready_matches.items()
+            api_key: timestamp
+            for api_key, timestamp in ReadyManager._ready_matches.items()
             if now - timestamp <= ReadyManager.EXPIRE_TIME
         }

@@ -1,3 +1,4 @@
+import json
 import logging
 from aiohttp import web
 
@@ -84,14 +85,11 @@ class WebServer:
         self.logger.info(f"Received webhook event from {req.url}")
 
         api_key = req.headers.get('Authorization').strip('Bearer ')
-        match_model = await self.bot.db.get_match_by_api_key(api_key)
         resp_data = await req.json()
-        match_api = Match.from_dict(resp_data)
 
-        if not match_model or not match_api:
-            return
+        self.logger.info(f"Received webhook event from {req.url}: {json.dumps(resp_data)}")
 
-        ReadyManager.ready(match_api.id)
+        ReadyManager.mark_ready(api_key)
 
         return web.Response(status=200)
 

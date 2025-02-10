@@ -305,14 +305,6 @@ class MatchCog(commands.Cog, name="Match"):
             description = 'Something went wrong! See logs for details'
         else:
 
-            await message.edit(embed=Embed(description='Waiting for the server to finish setting up...'), view=None)
-            await asyncio.sleep(2)
-
-            for attempt in range(30):
-                if ReadyManager.check(api_match.id):
-                    break
-                await asyncio.sleep(1)
-
             embed = self.embed_match_info(api_match, game_server)
             await message.edit(embed=embed)
 
